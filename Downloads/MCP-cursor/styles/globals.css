@@ -1,0 +1,562 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 30, 41, 59;
+  --background-start-rgb: 249, 250, 251;
+  --background-end-rgb: 241, 245, 249;
+  --chat-bubble-user: 239, 246, 255;
+  --chat-bubble-assistant: 255, 255, 255;
+  --chat-text-user: 30, 58, 138;
+  --chat-text-assistant: 30, 41, 59;
+  --chat-border-user: 219, 234, 254;
+  --chat-border-assistant: 226, 232, 240;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 248, 250, 252;
+    --background-start-rgb: 15, 23, 42;
+    --background-end-rgb: 30, 41, 59;
+    --chat-bubble-user: 30, 58, 138, 0.2;
+    --chat-bubble-assistant: 51, 65, 85, 0.4;
+    --chat-text-user: 219, 234, 254;
+    --chat-text-assistant: 248, 250, 252;
+    --chat-border-user: 30, 58, 138, 0.4;
+    --chat-border-assistant: 51, 65, 85, 0.6;
+  }
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 
+    Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom right,
+      rgb(var(--background-start-rgb)),
+      rgb(var(--background-end-rgb))
+    )
+    fixed;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Custom scrollbar for conversation container */
+.max-h-96::-webkit-scrollbar,
+.conversation-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.max-h-96::-webkit-scrollbar-track,
+.conversation-container::-webkit-scrollbar-track {
+  background: rgba(241, 245, 249, 0.5);
+  border-radius: 4px;
+}
+
+.max-h-96::-webkit-scrollbar-thumb,
+.conversation-container::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.5);
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.max-h-96::-webkit-scrollbar-thumb:hover,
+.conversation-container::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(100, 116, 139, 0.6);
+}
+
+@media (prefers-color-scheme: dark) {
+  .max-h-96::-webkit-scrollbar-track,
+  .conversation-container::-webkit-scrollbar-track {
+    background: rgba(30, 41, 59, 0.5);
+  }
+  
+  .max-h-96::-webkit-scrollbar-thumb,
+  .conversation-container::-webkit-scrollbar-thumb {
+    background-color: rgba(71, 85, 105, 0.5);
+  }
+  
+  .max-h-96::-webkit-scrollbar-thumb:hover,
+  .conversation-container::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(100, 116, 139, 0.7);
+  }
+}
+
+/* Animation for the thinking/loading indicators */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-pulse {
+  animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Enhanced typography styles */
+.prose code {
+  @apply bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-sm font-mono;
+}
+
+.prose pre {
+  @apply bg-slate-100 dark:bg-slate-700 p-3 rounded-lg overflow-x-auto text-sm my-3;
+}
+
+.prose blockquote {
+  @apply border-l-4 border-slate-300 dark:border-slate-600 pl-4 italic text-slate-600 dark:text-slate-400;
+}
+
+.prose ul {
+  @apply list-disc pl-5;
+}
+
+.prose ol {
+  @apply list-decimal pl-5;
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4 {
+  @apply font-semibold text-slate-800 dark:text-slate-200 my-3;
+}
+
+.prose p {
+  @apply my-2;
+}
+
+.prose a {
+  @apply text-blue-600 dark:text-blue-400 hover:underline;
+}
+
+/* Focus styles */
+*:focus-visible {
+  @apply outline-none ring-2 ring-blue-500 ring-offset-2 ring-offset-white dark:ring-offset-slate-800;
+}
+
+/* Input placeholder styling */
+::placeholder {
+  @apply text-slate-400 dark:text-slate-500;
+}
+
+/* Transitions */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
+/* Button styling */
+button:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+/* Tailwind typography plugin customization */
+.prose {
+  max-width: none;
+}
+
+/* Animated gradient background for header */
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg shadow-sm font-medium transition-colors;
+  }
+  
+  .btn-primary {
+    @apply bg-blue-600 text-white hover:bg-blue-700 transition-all transform hover:scale-105;
+  }
+  
+  .input {
+    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm;
+  }
+
+  .card {
+    @apply bg-white rounded-xl shadow-md p-6 border border-gray-100 transition-all hover:shadow-lg;
+  }
+
+  .conversation-container {
+    @apply max-h-[600px] overflow-y-auto px-2 py-4 rounded-xl border mb-6 shadow-inner;
+  }
+
+  .message {
+    @apply mb-5 relative transition-all duration-200;
+  }
+
+  .message-bubble {
+    @apply p-4 rounded-xl shadow-sm border max-w-[85%] transition-all;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  .user-message {
+    @apply flex justify-end;
+  }
+
+  .user-message .message-bubble {
+    @apply bg-blue-50 border-blue-100 text-blue-900 mr-2 rounded-tr-sm;
+  }
+
+  .assistant-message {
+    @apply flex justify-start;
+  }
+
+  .assistant-message .message-bubble {
+    @apply bg-white border-slate-200 text-slate-800 ml-2 rounded-tl-sm;
+    padding-bottom: 1rem;
+    box-shadow: 0 2px 12px rgba(30, 41, 59, 0.08);
+    position: relative;
+  }
+  
+  .system-message {
+    @apply flex justify-center;
+  }
+
+  .system-message .message-bubble {
+    @apply bg-slate-100 border-slate-200 text-slate-600 px-6;
+  }
+
+  .message-avatar {
+    @apply h-8 w-8 rounded-full overflow-hidden flex items-center justify-center text-xs font-medium;
+  }
+
+  .message-time {
+    @apply text-[11px] opacity-70 mt-1 mx-2 select-none;
+  }
+
+  .message-role {
+    @apply uppercase text-xs font-semibold tracking-wider mb-1;
+  }
+
+  /* Animation for messages */
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .message {
+    animation: slideIn 0.3s ease-out forwards;
+  }
+
+  /* Dark mode overrides */
+  .dark .user-message .message-bubble {
+    @apply bg-blue-900/20 border-blue-800/30 text-blue-100;
+  }
+
+  .dark .assistant-message .message-bubble {
+    @apply bg-slate-800 border-slate-700 text-slate-200;
+    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.3);
+  }
+
+  .dark .system-message .message-bubble {
+    @apply bg-slate-800/50 border-slate-700/50 text-slate-300;
+  }
+
+  /* Prose classes for message content styling */
+  .message-content {
+    @apply prose prose-sm max-w-none;
+    line-height: 1.5;
+  }
+
+  .message-content p {
+    @apply my-1.5;
+  }
+
+  .message-content code {
+    @apply px-1.5 py-0.5 rounded text-sm font-mono;
+  }
+
+  .message-content pre {
+    @apply p-3 rounded-lg my-2 overflow-x-auto;
+  }
+
+  .user-message .message-content pre,
+  .user-message .message-content code {
+    @apply bg-blue-100 text-blue-900;
+  }
+
+  .assistant-message .message-content {
+    @apply text-slate-800;
+    font-size: 0.95rem;
+  }
+
+  .assistant-message .message-content strong {
+    @apply font-semibold text-slate-900;
+  }
+
+  .assistant-message .message-content em {
+    @apply italic text-slate-700;
+  }
+
+  /* Better list styling for comprehensive responses */
+  .assistant-message .message-content ul {
+    @apply pl-5 my-2 space-y-1;
+  }
+
+  .assistant-message .message-content ol {
+    @apply pl-5 my-2 space-y-1;
+  }
+
+  .assistant-message .message-content li {
+    @apply mb-1;
+  }
+
+  /* Definition styling */
+  .assistant-message .message-content dl {
+    @apply my-2;
+  }
+
+  .assistant-message .message-content dt {
+    @apply font-medium text-slate-900;
+  }
+
+  .assistant-message .message-content dd {
+    @apply ml-4 mb-2;
+  }
+
+  /* Quote styling */
+  .assistant-message .message-content blockquote {
+    @apply pl-4 py-0.5 border-l-2 border-slate-300 bg-slate-50 rounded-sm my-2 italic text-slate-600;
+  }
+
+  /* Divider styling */
+  .assistant-message .message-content hr {
+    @apply my-3 border-slate-200;
+  }
+
+  /* Section styling */
+  .assistant-message .message-content section {
+    @apply mb-3;
+  }
+
+  .dark .assistant-message .message-content {
+    @apply text-slate-200;
+  }
+
+  .dark .assistant-message .message-content strong {
+    @apply text-white;
+  }
+
+  .dark .assistant-message .message-content em {
+    @apply text-slate-300;
+  }
+
+  .dark .assistant-message .message-content blockquote {
+    @apply border-slate-600 bg-slate-800/50 text-slate-300;
+  }
+
+  .dark .assistant-message .message-content hr {
+    @apply border-slate-700;
+  }
+
+  /* Add visual hierarchical indicators */
+  .assistant-message .message-bubble::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #10b981, #0ea5e9);
+    border-top-left-radius: 0.75rem;
+    border-top-right-radius: 0.75rem;
+    opacity: 0.8;
+  }
+
+  /* Typing indicator animation */
+  @keyframes typingDot {
+    0%, 100% { opacity: 0.2; transform: translateY(0); }
+    50% { opacity: 1; transform: translateY(-2px); }
+  }
+
+  .typing-indicator span {
+    @apply inline-block h-2 w-2 rounded-full bg-current mx-0.5;
+    animation: typingDot 1s infinite;
+  }
+
+  .typing-indicator span:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  .typing-indicator span:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+
+  .app-container {
+    @apply max-w-4xl mx-auto px-4 py-8;
+  }
+
+  .app-header {
+    @apply text-3xl font-bold text-center text-blue-800 mb-8;
+  }
+}
+
+/* Adding some more polish */
+.transition-gpu {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+/* Shadow glow effects for messages */
+.message-bubble {
+  position: relative;
+}
+
+.user-message .message-bubble {
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.08);
+}
+
+.assistant-message .message-bubble {
+  box-shadow: 0 2px 8px rgba(30, 41, 59, 0.08);
+}
+
+/* Tailwind typography plugin customization */
+.prose strong {
+  @apply font-semibold;
+}
+
+.prose a {
+  @apply text-blue-600 hover:text-blue-700 decoration-blue-300 underline-offset-2 transition-colors;
+}
+
+.dark .prose a {
+  @apply text-blue-400 hover:text-blue-300 decoration-blue-800;
+}
+
+/* Restore and enhance code styling */
+.assistant-message .message-content pre,
+.assistant-message .message-content code {
+  @apply bg-slate-100 text-slate-800;
+}
+
+.dark .assistant-message .message-content pre,
+.dark .assistant-message .message-content code {
+  @apply bg-slate-700 text-slate-200;
+}
+
+.dark .user-message .message-content pre,
+.dark .user-message .message-content code {
+  @apply bg-blue-900/30 text-blue-100;
+}
+
+/* Enhanced code blocks */
+.assistant-message .message-content pre {
+  @apply p-3 rounded-lg my-3 overflow-x-auto text-sm border border-slate-200 shadow-sm;
+  max-width: 100%;
+}
+
+.dark .assistant-message .message-content pre {
+  @apply border-slate-600;
+}
+
+/* Code syntax elements */
+.assistant-message .message-content pre .keyword,
+.assistant-message .message-content pre .builtin {
+  @apply text-purple-600 dark:text-purple-400;
+}
+
+.assistant-message .message-content pre .string {
+  @apply text-green-600 dark:text-green-400;
+}
+
+.assistant-message .message-content pre .number {
+  @apply text-orange-600 dark:text-orange-400;
+}
+
+.assistant-message .message-content pre .comment {
+  @apply text-slate-500 dark:text-slate-400 italic;
+}
+
+/* Inline code */
+.assistant-message .message-content p code,
+.assistant-message .message-content li code {
+  @apply px-1.5 py-0.5 rounded text-sm font-mono bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200;
+}
+
+/* Enhanced styling for assistant message bubble */
+.assistant-message .message-bubble {
+  border-radius: 0.75rem 0.75rem 0.75rem 0.25rem;
+}
+
+/* Response content styling */
+.response-content h2 {
+  position: relative;
+  padding-left: 0.5rem;
+}
+
+.response-content h2:before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.2rem;
+  bottom: 0.2rem;
+  width: 3px;
+  background: linear-gradient(to bottom, #10b981, #0ea5e9);
+  border-radius: 3px;
+}
+
+.response-content h3 {
+  position: relative;
+  padding-left: 0.5rem;
+}
+
+.response-content h3:before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.25rem;
+  bottom: 0.25rem;
+  width: 2px;
+  background: #cbd5e1;
+  border-radius: 2px;
+}
+
+.dark .response-content h3:before {
+  background: #475569;
+}
+
+/* Improved blockquote styling */
+.response-content blockquote,
+.assistant-message .message-content blockquote {
+  @apply pl-4 py-0.5 border-l-2 border-slate-300 bg-slate-50 rounded-sm my-2 italic text-slate-600;
+}
+
+.dark .response-content blockquote,
+.dark .assistant-message .message-content blockquote {
+  @apply border-slate-600 bg-slate-800/50 text-slate-300;
+}
+
+/* Enhance bold formatting */
+.response-content strong {
+  @apply font-semibold text-emerald-800 dark:text-emerald-400;
+} 
