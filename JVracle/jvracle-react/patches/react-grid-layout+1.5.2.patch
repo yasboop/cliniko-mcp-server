@@ -1,0 +1,13 @@
+diff --git a/node_modules/react-grid-layout/build/utils.js b/node_modules/react-grid-layout/build/utils.js
+index b588d38..71a4fcb 100644
+--- a/node_modules/react-grid-layout/build/utils.js
++++ b/node_modules/react-grid-layout/build/utils.js
+@@ -196,7 +196,7 @@ function cloneLayoutItem(layoutItem /*: LayoutItem*/) /*: LayoutItem*/{
+  * This will catch differences in keys, order, and length.
+  */
+ function childrenEqual(a /*: ReactChildren*/, b /*: ReactChildren*/) /*: boolean*/{
+-  return (0, _fastEquals.deepEqual)(_react.default.Children.map(a, c => c?.key), _react.default.Children.map(b, c => c?.key)) && (0, _fastEquals.deepEqual)(_react.default.Children.map(a, c => c?.props["data-grid"]), _react.default.Children.map(b, c => c?.props["data-grid"]));
++  return (0, _fastEquals.deepEqual)(_react.default.Children.map(a, c => c && c.key), _react.default.Children.map(b, c => c && c.key)) && (0, _fastEquals.deepEqual)(_react.default.Children.map(a, c => c && c.props && c.props["data-grid"]), _react.default.Children.map(b, c => c && c.props && c.props["data-grid"]));
+ }
+ 
+ /**
