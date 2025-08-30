@@ -1,0 +1,4 @@
+fastmcp
+httpx
+python-dotenv
+uvicorn[standard]>=0.24.0
