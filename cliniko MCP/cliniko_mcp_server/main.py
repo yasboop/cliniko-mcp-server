@@ -15,16 +15,7 @@ app = FastMCP("Cliniko MCP Server")
 # Create the Cliniko client
 client = ClinikoClient()
 
-# Health check endpoint for deployment monitoring
-@app.get("/health")
-def health_check():
-    """Health check endpoint for deployment monitoring"""
-    return {
-        "status": "healthy",
-        "version": "1.0.0",
-        "timestamp": "2025-08-30T22:35:00Z",
-        "api_key_configured": bool(os.getenv("CLINIKO_API_KEY"))
-    }
+# Health check handled by FastMCP's built-in server
 
 # Register all patient tools directly here
 @app.tool("list_patients", description="List/search all Cliniko patients")
@@ -132,8 +123,8 @@ async def list_appointments_resource():
     return {"appointments": await client.list_appointments()}
 
 if __name__ == "__main__":
-    import uvicorn
-
+    import asyncio
+    
     print("🚀 Starting Cliniko MCP Server...")
 
     # Check registered tools
@@ -147,15 +138,21 @@ if __name__ == "__main__":
 
     print("🎯 Server ready to start...")
 
-    # Use production server for deployment
+    # Get configuration from environment
     port = int(os.getenv("PORT", 8000))
     host = os.getenv("HOST", "0.0.0.0")
+    transport = os.getenv("MCP_TRANSPORT", "sse").lower()
 
-    print(f"🌐 Starting server on {host}:{port}")
-    uvicorn.run(
-        "main:app",
-        host=host,
-        port=port,
-        reload=False,  # Disable reload in production
-        log_level="info"
-    )
+    print(f"🌐 Starting MCP server on {host}:{port} using {transport} transport")
+    
+    if transport == "stdio":
+        # For local development with AI clients that spawn processes
+        print("📟 Running in stdio mode (for local AI clients)")
+        app.run("stdio")
+    elif transport == "sse":
+        # For remote connections via Server-Sent Events
+        print("🌊 Running in SSE mode (for remote connections)")
+        asyncio.run(app.run_sse_async(host=host, port=port, log_level="info"))
+    else:
+        print(f"❌ Unknown transport: {transport}. Supported: stdio, sse")
+        exit(1)
