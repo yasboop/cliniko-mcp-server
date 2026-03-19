@@ -4,13 +4,15 @@ import asyncio
 from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Union, Any
 import requests
 from bs4 import BeautifulSoup
 import httpx
 import logging
-from playwright.async_api import async_playwright
+from playwright.async_api import async_playwright, Page, BrowserContext, Browser
 import traceback
+from http.server import BaseHTTPRequestHandler
+import uvicorn
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, 
@@ -30,21 +32,40 @@ app.add_middleware(
 )
 
 # In-memory storage for scraped content (session-based)
-content_store = {}
+content_store: Dict[str, Dict[str, str]] = {}
 
 class UrlsInput(BaseModel):
+    """
+    Input model for URL scraping requests
+    
+    Attributes:
+        urls (List[str]): List of URLs to scrape content from
+        session_id (Optional[str]): Existing session ID for content updates
+    """
     urls: List[str]
     session_id: Optional[str] = None
 
 class QuestionInput(BaseModel):
+    """
+    Input model for question answering requests
+    
+    Attributes:
+        question (str): The question to answer based on extracted content
+        session_id (str): Session ID that identifies the associated content
+    """
     question: str
     session_id: str
 
 # Cache for the playwright browser instance to avoid repeatedly launching browsers
-playwright_cache = {"browser": None, "context": None, "playwright": None}
+playwright_cache: Dict[str, Any] = {"browser": None, "context": None, "playwright": None}
 
-async def initialize_playwright():
-    """Initialize the playwright browser if not already initialized."""
+async def initialize_playwright() -> None:
+    """
+    Initialize the playwright browser if not already initialized.
+    
+    This function creates and configures a headless browser instance
+    that can be reused for multiple content extraction requests.
+    """
     if playwright_cache["browser"] is None:
         try:
             logger.info("Initializing Playwright browser")
@@ -70,14 +91,30 @@ async def initialize_playwright():
             logger.error(f"Failed to initialize Playwright: {str(e)}")
             raise
 
-async def get_playwright_context():
-    """Get or create the Playwright context."""
+async def get_playwright_context() -> BrowserContext:
+    """
+    Get or create the Playwright browser context.
+    
+    Returns:
+        BrowserContext: The browser context that can be used to create pages
+    """
     if playwright_cache["context"] is None:
         await initialize_playwright()
     return playwright_cache["context"]
 
 async def extract_content_with_playwright(url: str) -> str:
-    """Extract content from a URL using Playwright for advanced browser-based scraping."""
+    """
+    Extract content from a URL using Playwright for advanced browser-based scraping.
+    
+    This function handles dynamic websites, JavaScript rendering, and special cases
+    for academic websites with paywalls.
+    
+    Args:
+        url (str): The URL to extract content from
+        
+    Returns:
+        str: The extracted content as text
+    """
     logger.info(f"Extracting content from {url} using Playwright")
     
     # Initialize playwright if needed

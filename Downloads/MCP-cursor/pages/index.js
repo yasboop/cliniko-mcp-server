@@ -2,44 +2,116 @@ import { useState, useRef, useEffect } from 'react'
 import Head from 'next/head'
 import Image from 'next/image'
 
+/**
+ * Home Component - Main page of the AiSensy Content Intelligence application
+ * 
+ * This component allows users to:
+ * 1. Input one or more URLs to extract content from
+ * 2. Ask questions about the extracted content
+ * 3. View AI-generated answers based solely on the provided content
+ * 4. Toggle between light and dark modes
+ * 
+ * @returns {JSX.Element} The rendered Home component
+ */
 export default function Home() {
   // States for form inputs and responses
+  /**
+   * Array of URLs entered by the user
+   * @type {[string[], function]} URL strings and setter function
+   */
   const [urls, setUrls] = useState([''])
+  
+  /**
+   * Session ID returned by the API for tracking the current content extraction
+   * @type {[string, function]} Session ID and setter function
+   */
   const [sessionId, setSessionId] = useState('')
+  
+  /**
+   * Current question being asked by the user
+   * @type {[string, function]} Question text and setter function
+   */
   const [question, setQuestion] = useState('')
+  
+  /**
+   * Loading state for question answering
+   * @type {[boolean, function]} Loading state and setter function
+   */
   const [isLoading, setIsLoading] = useState(false)
+  
+  /**
+   * Loading state for content extraction
+   * @type {[boolean, function]} Loading state and setter function
+   */
   const [isPreparing, setIsPreparing] = useState(false)
+  
+  /**
+   * Error message to display to the user
+   * @type {[string, function]} Error message and setter function
+   */
   const [error, setError] = useState('')
+  
+  /**
+   * Conversation history between user and AI
+   * @type {[Array<{role: string, content: string, warning?: boolean}>, function]} Messages array and setter function
+   */
   const [messages, setMessages] = useState([])
+  
+  /**
+   * Whether content has been successfully loaded from URLs
+   * @type {[boolean, function]} Content loaded state and setter function
+   */
   const [contentLoaded, setContentLoaded] = useState(false)
+  
+  /**
+   * Status of website compatibility for content extraction
+   * @type {[{status: string, message: string}, function]} Compatibility status and setter function
+   */
   const [siteCompatibility, setSiteCompatibility] = useState({
     status: 'waiting', // 'waiting', 'compatible', 'warning', 'incompatible'
     message: ''
   })
+  
+  /**
+   * Current UI theme (light or dark mode)
+   * @type {[string, function]} Theme name and setter function
+   */
   const [theme, setTheme] = useState('light') // 'light' or 'dark'
 
   const conversationEndRef = useRef(null)
   const urlInputRef = useRef(null)
   
-  // Auto-scroll to bottom of conversation when new messages are added
+  /**
+   * Auto-scroll to bottom of conversation when new messages are added
+   */
   useEffect(() => {
     if (conversationEndRef.current) {
       conversationEndRef.current.scrollIntoView({ behavior: 'smooth' })
     }
   }, [messages])
 
-  // Validate URL input when it changes
+  /**
+   * Effect to check compatibility of entered URLs
+   * Assesses the first URL to determine likely extraction success
+   */
   useEffect(() => {
     if (urls[0]) {
-      // Reset site compatibility status
+      // Reset compatibility status and error when URL changes
       setSiteCompatibility({ status: 'waiting', message: '' })
+      setError('') // Clear any previous error message when URL changes
       
       try {
+        // Ensure URL has protocol, add https:// if missing
+        let urlToCheck = urls[0]
+        if (!urlToCheck.startsWith('http://') && !urlToCheck.startsWith('https://')) {
+          urlToCheck = 'https://' + urlToCheck
+        }
+        
         // Check URL format validity
-        new URL(urls[0])
+        new URL(urlToCheck)
         
         // Determine site compatibility based on the domain
-        const domain = new URL(urls[0]).hostname.toLowerCase()
+        const domain = new URL(urlToCheck).hostname.toLowerCase()
         
         if (domain.includes('wikipedia.org') || 
             domain.includes('bbc.com') || 
@@ -60,7 +132,7 @@ export default function Home() {
           })
         }
       } catch (e) {
-        // Invalid URL format - don't show any status until it's valid
+        // Don't show any error - just reset compatibility status
         if (urls[0].length > 10) {
           setSiteCompatibility({
             status: 'incompatible',
@@ -71,19 +143,34 @@ export default function Home() {
     }
   }, [urls[0]])
 
-  // Add a new URL input field
+  /**
+   * Add a new empty URL input field
+   */
   const addUrlField = () => {
     setUrls([...urls, ''])
   }
 
-  // Handle URL input change
+  /**
+   * Update a URL at the specified index
+   * 
+   * @param {number} index - The index of the URL to update
+   * @param {string} value - The new URL value
+   */
   const updateUrl = (index, value) => {
     const newUrls = [...urls]
     newUrls[index] = value
     setUrls(newUrls)
+    
+    // Clear error message when user edits URL
+    if (error) {
+      setError('')
+    }
   }
 
-  // Scrape content from provided URLs
+  /**
+   * Extract content from the provided URLs
+   * This function makes an API call to the backend to scrape content from the URLs
+   */
   const handleScrapeContent = async () => {
     // Filter out empty URLs
     const validUrls = urls.filter(url => url.trim() !== '')
@@ -93,13 +180,21 @@ export default function Home() {
       return
     }
     
+    // Ensure all URLs have the protocol prefix
+    const formattedUrls = validUrls.map(url => {
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        return 'https://' + url;
+      }
+      return url;
+    });
+    
     setIsPreparing(true)
     setError('')
     
     try {
       // Prepare API request payload
       const payload = {
-        urls: validUrls,
+        urls: formattedUrls,
         session_id: sessionId || undefined
       }
       
@@ -144,7 +239,12 @@ export default function Home() {
     }
   }
 
-  // Ask a question about the scraped content
+  /**
+   * Ask a question about the extracted content
+   * This function sends the question to the backend API and displays the response
+   * 
+   * @param {Event} e - The form submission event
+   */
   const handleAskQuestion = async (e) => {
     e.preventDefault()
     
@@ -199,7 +299,9 @@ export default function Home() {
     }
   }
 
-  // Start a new session
+  /**
+   * Reset the application state to start a new session
+   */
   const startNewSession = () => {
     setSessionId('')
     setUrls([''])
@@ -215,6 +317,9 @@ export default function Home() {
     }
   }
 
+  /**
+   * Toggle between light and dark themes
+   */
   const toggleTheme = () => {
     setTheme(theme === 'light' ? 'dark' : 'light')
   }
@@ -300,7 +405,7 @@ export default function Home() {
                     {urls.map((url, index) => (
                       <div key={index} className="relative">
                         <input
-                          type="url"
+                          type="text"
                           ref={index === 0 ? urlInputRef : null}
                           value={url}
                           onChange={(e) => updateUrl(index, e.target.value)}
@@ -560,6 +665,32 @@ export default function Home() {
                                                         return <span key={k}>{part}</span>;
                                                       }
                                                     })}
+                                                  </div>
+                                                );
+                                              }
+                                              // Handle citation references [1], [2], etc.
+                                              else if (line.includes('[') && line.match(/\[\d+\]/)) {
+                                                // Split the text by citation pattern [n]
+                                                const parts = line.split(/(\[\d+\])/g);
+                                                return (
+                                                  <div key={j} className="mb-2">
+                                                    {parts.map((part, k) => {
+                                                      if (part.match(/\[\d+\]/)) {
+                                                        // This is a citation reference
+                                                        return <sup key={k} className="text-xs font-medium px-1 text-emerald-700 dark:text-emerald-400">{part}</sup>;
+                                                      } else {
+                                                        // Regular text
+                                                        return <span key={k}>{part}</span>;
+                                                      }
+                                                    })}
+                                                  </div>
+                                                );
+                                              }
+                                              // Check if this is a "References:" line
+                                              else if (line.trim() === 'References:' || line.trim() === 'References') {
+                                                return (
+                                                  <div key={j} className="mt-4 mb-2 font-semibold text-slate-700 dark:text-slate-300 border-t pt-2">
+                                                    {line}
                                                   </div>
                                                 );
                                               }

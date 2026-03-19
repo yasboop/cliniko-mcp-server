@@ -322,7 +322,7 @@ async def answer_question(input_data: QuestionInput):
     content = content_store[session_id]
     
     # Get API key from environment or use provided key
-    api_key = os.getenv("MISTRAL_API_KEY", "Yk0jCzWir3ghtSrShkqjHB6NKaANMUAm")
+    api_key = os.getenv("MISTRAL_API_KEY", "rVRInnNrj0m126vjrx6yCxOETxe29Z6W")
     
     # Prepare the prompt
     # If content is a dictionary, combine all the content into a single string

@@ -119,8 +119,19 @@ async def ask_question(request: QuestionRequest):
         # Generate answer using Mistral AI
         try:
             messages = [
-                ChatMessage(role="system", content="You are a helpful assistant that answers questions based on provided content. Provide well-structured, comprehensive responses with the following guidelines:\n\n1. Use clear formatting with paragraphs, bullet points, and numbered lists where appropriate\n2. For technical or scientific topics, include clear definitions\n3. For complex answers, use headings (e.g., '# Main Point') to organize information\n4. Use bullet points for listing features, characteristics, or examples\n5. Use numbered lists for sequential information, steps or ranked items\n6. Bold important terms or key concepts using **term**\n7. Add visual structure with --- as separators for different sections when appropriate\n8. Only use information found in the provided content. If the answer cannot be found in the content, say so."),
-                ChatMessage(role="user", content=f"Here is content that I've extracted from webpages:\n\n{content}\n\nBased only on this content, please answer the following question: {request.question}\n\nProvide a comprehensive, well-structured answer with appropriate formatting.")
+                ChatMessage(role="system", content="""You are a helpful assistant that answers questions based on provided content. Format your responses using these simpler guidelines:
+
+1. Use clear paragraph breaks with a blank line between paragraphs.
+2. Use # for main headings (e.g., '# Chemistry') and ## for subheadings.
+3. For bullet points, use simple dashes: '- Point one'
+4. For numbered lists, use simple numbers: '1. First item'
+5. For bold text, use **bold text**.
+6. Instead of links with markdown format [text](url), use inline citations like 'text [1]' and add a References section at the end.
+7. Use simple line breaks for spacing and organization.
+8. Only use information found in the provided content. If the answer cannot be found in the content, say so clearly.
+
+Keep formatting simple and avoid complex markdown or citation formats that might not render properly."""),
+                ChatMessage(role="user", content=f"Here is content that I've extracted from webpages:\n\n{content}\n\nBased only on this content, please answer the following question: {request.question}\n\nProvide a clear, well-structured answer using the formatting guidelines.")
             ]
             
             response = mistral_client.chat(
